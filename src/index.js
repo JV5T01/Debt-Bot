@@ -18,8 +18,8 @@ const PREFIX = ';';
 const DEBT_FILE = path.join(__dirname, 'debt.json');
 const COIN_FILE = path.join(__dirname, 'coinamount.json');
 const DAILY_FILE = path.join(__dirname, 'daily.json');
-const ADMIN_ROLE_IDS = ['1368869202802507806', '1361389058235957248', '1357034066200760391', '1401913168799993908', '1141162089830948976', '1404845866631692298'];
-const MILESTONE_ROLE_ID = '1401826307154772009';
+const ADMIN_ROLE_IDS = ['']; // Add admin roles here for the commmands 'setdebt', 'ssd' or 'rs'.
+const MILESTONE_ROLE_ID = ['']; 
 const DEBT_MILESTONES = [100, 250, 350, 500, 750, 1000];
 
 let userDebts = {};
@@ -170,11 +170,11 @@ client.on('messageCreate', async message => {
           await message.react('✅');
         } catch {}
 
-        const channelId = ('1401833337487753316', '1404851796337229896');
+        const channelId = (''); // Add your channel ID here.
         try {
           const channel = await client.channels.fetch(channelId);
           if (channel && channel.isTextBased()) {
-            await channel.send(`<@&1404856537284874392> <@${client.user.id}> is now ${isRestart ? 'restarting' : 'offline'}..`);
+            await channel.send(`<@${client.user.id}> is now ${isRestart ? 'restarting' : 'offline'}..`);
           }
         } catch (err) {
           console.error('Failed to send shutdown/restart message:', err.message);
@@ -190,8 +190,7 @@ client.on('messageCreate', async message => {
       }
       return;
     }
-
-    // Your other commands here:
+    
     if (command === 'help') {
       const embed = new EmbedBuilder()
         .setTitle('Debt Bot Commands')
