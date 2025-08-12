@@ -1,0 +1,1 @@
+The creator of the bot is 'jv5t01.', if this bot is used for other projects, please give credit.
