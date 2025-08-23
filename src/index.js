@@ -1,7 +1,7 @@
 require('dotenv').config({
  path: '../.env', 
  quiet: 'true'});
-const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder, userMention } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -15,12 +15,13 @@ const client = new Client({
 });
 
 const PREFIX = ';';
+const LOG_CHANNEL_ID = ''; // Add your own.
 const DEBT_FILE = path.join(__dirname, 'debt.json');
 const COIN_FILE = path.join(__dirname, 'coinamount.json');
 const DAILY_FILE = path.join(__dirname, 'daily.json');
-const ADMIN_ROLE_IDS = ['']; // Add admin roles here for the commmands 'setdebt', 'ssd' or 'rs'.
-const MILESTONE_ROLE_ID = ['']; 
-const DEBT_MILESTONES = [100, 250, 350, 500, 750, 1000];
+const ADMIN_ROLE_IDS = ['']; // Add your own.
+const MILESTONE_ROLE_IDS = ['']; // Add your own.
+const DEBT_MILESTONES = [100, 250, 350, 500, 750, 1000, 2000, 3000, 4000, 5000, 10000, ];
 
 let userDebts = {};
 let coins = {};
@@ -53,8 +54,8 @@ async function checkAndRemoveMilestoneRoleIfBelowThreshold(message, userId, debt
   if (debt < 250) {
     try {
       const guildMember = await message.guild.members.fetch(userId);
-      if (guildMember.roles.cache.has(MILESTONE_ROLE_ID)) {
-        await guildMember.roles.remove(MILESTONE_ROLE_ID);
+      if (guildMember.roles.cache.has(MILESTONE_ROLE_IDS)) {
+        await guildMember.roles.remove(MILESTONE_ROLE_IDS);
       }
     } catch (err) {
       console.warn(`⚠️ Couldn't remove milestone role from user ${userId}:`, err.message);
@@ -63,10 +64,50 @@ async function checkAndRemoveMilestoneRoleIfBelowThreshold(message, userId, debt
 }
 
 client.once('ready', () => {
-  console.log(`${client.user.tag} is online.`);
+    console.log(`${client.user.tag} is online.`);
+
+    const statuses = [
+        { name: 'taking your coins', type: 5 }, // Competing
+        { name: 'the debt rise', type: 3 }, // Watching
+        { name: 'you gamble', type: 3 }, // Watching
+        { name: 'you manage your debts', type: 3 }, // Watching
+        { name: 'Men Whimpering Audio 10 hours', type: 2 }, // Listening
+        { 
+            name: 'my gambling addiction', 
+            type: 1, // Streaming
+            url: 'https://twitch.tv/jv5t01' // My Twitch
+        }
+    ];
+
+    let i = 0;
+    setInterval(() => {
+        client.user.setPresence({
+            activities: [statuses[i]],
+            status: 'online'
+        });
+        i = (i + 1) % statuses.length;
+    }, 10000); // Changes every 10 seconds
+
+    // Set initial status
+    client.user.setPresence({
+        activities: [statuses[0]],
+        status: 'online'
+    });
+});
+  
+client.on('messageCreate', message => {
+    // Ignore bots
+    if (message.author.bot) return;
+
+    const trigger = "men whimpering"; 
+
+    if (message.content.toLowerCase().includes(trigger.toLowerCase())) {
+        message.reply("i'm listening to it **because i can**.");
+    }
 });
 
-client.on('messageCreate', async message => {
+
+ client.on('messageCreate', async message => {
   try {
     if (message.author.bot) return;
 
@@ -93,7 +134,7 @@ client.on('messageCreate', async message => {
           if (milestone === 100) {
             notifyMessage += 'PAY YOUR DEBT';
           } else if (milestone === 250) {
-            notifyMessage += 'IM 50 MILES AWAY.';
+            notifyMessage += 'GET HIM GAYS';
           } else if (milestone === 350) {
             notifyMessage += 'IM 10 MILES AWAY, YOU BETTER RUN.';
           } else if (milestone === 500) {
@@ -102,6 +143,18 @@ client.on('messageCreate', async message => {
             notifyMessage += 'PAY.. YOUR.. DEBT.. NOW...';
           } else if (milestone === 1000) {
             notifyMessage += `*you\'re in the basement* | You hit 1,000 in debt.. you know what that means.. 🐟 (How the fuck did you get here? | 1,000 coins in debt..)`;
+          } else if (milestone === 2000) {
+            notifyMessage += `i'm bringing you to the backyard.. *grabs shotgun* you might wanna run.`;
+          } else if (milestone === 3000) {
+            notifyMessage += `*shoots you in the back multiple times with my shotgun* are you still alive?`;
+          } else if (milestone === 4000) {
+            notifyMessage += `YOU'RE STILL ALIVE??`;
+          } else if (milestone === 5000) {
+            notifyMessage += `alright thats it, how the fuck did you get to 5000 debt`;
+          } else if (milestone === 10000) {
+            notifyMessage += `what the **FUCK**? WHY ARENT YOU PAYING YOUR DEBTS`;
+          
+            
           
             try {
               const guildMember = await message.guild.members.fetch(userId);
@@ -129,7 +182,7 @@ client.on('messageCreate', async message => {
           if (milestone === 250) {
             try {
               const guildMember = await message.guild.members.fetch(userId);
-              await guildMember.roles.add(MILESTONE_ROLE_ID);
+              await guildMember.roles.add(MILESTONE_ROLE_IDS);
             } catch (err) {
               console.warn(`⚠️ Couldn't assign role to ${username}:`, err.message);
             }
@@ -153,14 +206,47 @@ client.on('messageCreate', async message => {
       p: 'pay',
       g: 'gamble',
       sd: 'setdebt',
+      sb: 'setbal',
       b: 'balance',
       lb: 'leaderboard',
-      h: 'help'
+      h: 'help',
+      give: 'gift',
+      r: 'rob', 
+      
     };
 
     command = aliases[command] || command;
 
-    // Shutdown / Restart commands with reaction and message
+const { EmbedBuilder } = require("discord.js");
+
+if (command) {
+  const logChannel = client.channels.cache.get(LOG_CHANNEL_ID);
+
+  if (logChannel) {
+    const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+    const argsString = args.length > 0 ? args.join(" ") : "(none)";
+
+    const logEmbed = new EmbedBuilder()
+      .setColor("Random")
+      .setTitle("📝 Command Used")
+      .addFields(
+        { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: false },
+        { name: "Command", value: `\`${command}\``, inline: true },
+        { name: "Args", value: argsString, inline: true },
+        { name: "_ _", value: "_ _", inline: true },
+        { name: "Server", value: message.guild ? message.guild.name : "DM", inline: true},
+        { name: "Channel", value: message.channel.name ? `#${message.channel.name}` : "DM", inline: true },
+        { name: "Time (EST)", value: timestamp, inline: false },
+        { name: "Message Link", value: `[Jump to Message](${message.url})`, inline: false }
+      )
+      .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+      .setTimestamp();
+
+    logChannel.send({ embeds: [logEmbed] });
+  }
+}
+
+    // Shutdown / Restart commands
     if (command === 'ssd' || command === 'rs') {
       const isRestart = command === 'rs';
       const isAdmin = ADMIN_ROLE_IDS.some(roleId => message.member.roles.cache.has(roleId));
@@ -170,7 +256,7 @@ client.on('messageCreate', async message => {
           await message.react('✅');
         } catch {}
 
-        const channelId = (''); // Add your channel ID here.
+        const channelId = ('1404851796337229896');
         try {
           const channel = await client.channels.fetch(channelId);
           if (channel && channel.isTextBased()) {
@@ -186,25 +272,33 @@ client.on('messageCreate', async message => {
         try {
           await message.react('❌');
         } catch {}
+        console.log(`${username} ran an admin only command, though the user does not have an admin role. | SSD/RS`)
         await message.reply('You do not have permission to use this command.');
       }
       return;
     }
-    
+
     if (command === 'help') {
       const embed = new EmbedBuilder()
         .setTitle('Debt Bot Commands')
-        .setColor('Blue')
+        .setColor('Blue') 
+        .setFooter({ text: 'There is a secret command, it is 7 digits \(numbers\), if you find it, then i\'ll be very surprised.' })
         .addFields(
           { name: ';help/h', value: 'Show this help message' },
-          { name: ';debt/d [@user]', value: 'Check your or someone else\'s debt' },
+          { name: ';debt/d', value: 'Check your or someone else\'s debt\nUsage `;debt/d [@user]`' },
           { name: ';pay/p', value: 'Pay off all your debt' },
-          { name: ';setdebt/sd [@user] [amount]', value: '(Admin Only) Set debt for others or yourself' },
+          { name: ';setdebt/sd', value: '(Admin Only) Set debt for others or yourself\nUsage `;setdebt/sd [@user]`' },
+          { name: ';setbal/sb', value: '(Admin Only) Set other users balance\nUsage `;setbal/sb [@user]`'},
           { name: ';balance/b', value: 'Check your coin balance' },
-          { name: ';daily', value: 'Claim 1000 coins daily.' },
+          { name: ';daily', value: 'Claim 1000 coins daily' },
           { name: ';gamble/g [amount]', value: '1 in 25 chance to double coins' },
-          { name: ';leaderboard/lb', value: 'Shows a leaderboard with users with the most debt' }
-        );
+          { name: ';tag', value: 'Choose between 3 tags: \n\'issue\'\n\'suggestion\'\n\'dbs\'' },
+          { name: ';leaderboard/lb', value: 'Shows a leaderboard with users with the most debt' },
+          { name: ';gift/give', value: 'Gift other users some coins!\nUsage `;gift/give {@user} {amount}`'},
+          { name: ';start', value: 'Get a head start by getting 10k coins when you use the commands! But you have to have less then 10k in your balance.'},
+          { name: ';rob/r', value: 'Rob other users, 40% chance of winning\nUsage `;rob/r [@user]`'},
+        )
+
       return message.reply({ embeds: [embed] });
     }
 
@@ -231,7 +325,7 @@ client.on('messageCreate', async message => {
   }
 
   const guildMember = await message.guild.members.fetch(userId);
-  const hasMilestoneRole = guildMember.roles.cache.has(MILESTONE_ROLE_ID);
+  const hasMilestoneRole = guildMember.roles.cache.has(MILESTONE_ROLE_IDS);
 
   // If user does NOT have enough coins to pay debt:
   if (coinBalance < debtAmount) {
@@ -246,7 +340,7 @@ client.on('messageCreate', async message => {
   // Remove milestone role if user has it
   try {
     if (hasMilestoneRole) {
-      await guildMember.roles.remove(MILESTONE_ROLE_ID);
+      await guildMember.roles.remove(MILESTONE_ROLE_IDS);
     }
   } catch (err) {
     console.warn(`⚠️ Couldn't remove milestone role from ${username}:`, err.message);
@@ -277,7 +371,8 @@ client.on('messageCreate', async message => {
       const embed = new EmbedBuilder()
         .setTitle('Top 10 people with debt')
         .setDescription(leaderboardText)
-        .setColor(0xff0000);
+        .setColor('Random');
+  
 
       return message.reply({ embeds: [embed] });
     }
@@ -290,7 +385,9 @@ client.on('messageCreate', async message => {
       const targetName = target ? target.username : username;
 
       if (!ADMIN_ROLE_IDS.some(roleId => message.member.roles.cache.has(roleId))) {
-        return message.reply('You do not have permission to use this command.');
+        console.log(`${username} ran an admin only command, though the user does not have an admin role. | SD`)
+        return message.reply('You do not have permission to use this command.')
+        
       }
 
       if (isNaN(amount)) {
@@ -308,7 +405,8 @@ client.on('messageCreate', async message => {
       return message.reply(`Debt for <@${targetId}> set to ${amount}.`);
     }
 
-    if (command === 'balance') { // Check your balance.. obviously.
+
+     if (command === 'balance') { // Check your balance.. obviously.
       if (!coins[userId] || typeof coins[userId] !== 'object') {
         coins[userId] = { username, balance: 0 };
       }
@@ -317,26 +415,67 @@ client.on('messageCreate', async message => {
       return message.reply(`You have ${coins[userId].balance} coins.`);
     }
 
-    if (command === 'daily') { // Gives you 1000 coins daily when the command is done.
-      const today = new Date().toDateString();
-      if (dailyClaims[userId] === today) {
-        return message.reply('You already claimed your daily coins today.');
-      }
-      const amount = 1000;
+  if (command === 'setbal') { // Admin Only | Set other users balance
+  const memberRoles = message.member.roles.cache;
+  const isAdmin = ADMIN_ROLE_IDS.some(roleId => memberRoles.has(roleId));
 
-      if (!coins[userId] || typeof coins[userId] !== 'object') {
-        coins[userId] = { username, balance: 0 };
-      }
+  if (!isAdmin) {
+    console.log(`${username} ran an admin only command, though the user does not have an admin role. | SB`)
+    return message.reply("You don't have permission to use this command.")
+  }
 
-      coins[userId].username = username;
-      coins[userId].balance += amount;
-      dailyClaims[userId] = today;
+  const target = message.mentions.users.first();
+  const amount = parseInt(args[1]);
 
-      saveJSON(COIN_FILE, coins);
-      saveJSON(DAILY_FILE, dailyClaims);
+  if (!target) {
+    return message.reply("You need to mention a user.");
+  }
+  if (isNaN(amount) || amount < 0) {
+    return message.reply("Please provide a valid number greater than or equal to 0.");
+  }
 
-      return message.reply(`You claimed your daily reward of ${amount} coins. Come back in 24 hours.`);
-    }
+  if (!coins[target.id]) {
+    coins[target.id] = { username: target.username, balance: 0 };
+  }
+
+  coins[target.id].balance = amount;
+  coins[target.id].username = target.username;
+
+  saveJSON(COIN_FILE, coins);
+
+  return message.reply(`✅ Set ${target.username}'s balance to ${amount} coins.`);
+}
+
+
+if (command === 'daily') {
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  const cooldown = 24 * 60 * 60 * 1000; // 24 hours in ms
+  const now = Date.now();
+
+  if (dailyClaims[userId] && now - dailyClaims[userId] < cooldown) {
+    const nextClaim = Math.floor((dailyClaims[userId] + cooldown) / 1000);
+    return message.reply(`You already claimed your daily coins.\n\nCome back **<t:${nextClaim}:R>**.`);
+  }
+
+  const amount = 1000;
+
+  if (!coins[userId] || typeof coins[userId] !== 'object') {
+    coins[userId] = { username, balance: 0 };
+  }
+
+  coins[userId].username = username;
+  coins[userId].balance += amount;
+  dailyClaims[userId] = now; // store the timestamp instead of a date string
+
+  saveJSON(COIN_FILE, coins);
+  saveJSON(DAILY_FILE, dailyClaims);
+
+  const nextClaim = Math.floor((now + cooldown) / 1000);
+  return message.reply(`You claimed your daily reward of ${amount} coins!\n\nCome back <t:${nextClaim}:R>.`);
+}
+
 
     if (command === 'gamble') { // LETS GO GAMBLING 🎰
       const amount = parseInt(args[0]);
@@ -353,35 +492,248 @@ client.on('messageCreate', async message => {
         return message.reply('You do not have enough coins to gamble that amount.');
       }
 
-      const win = Math.floor(Math.random() * 5) === 0;
+      const win = Math.floor(Math.random() * 3) === 0; // 1 in 3 chance
 
       if (win) {
+        const winAmount = Math.floor(Math.random() * amount) + 1;
         coins[userId].balance += amount;
-        await message.reply(`🎉 You won! Your new balance is ${coins[userId].balance} coins.`);
+        await message.reply(`🎉 You won ${winAmount}! Your new balance is **${coins[userId].balance}** coins.`);
       } else {
         const lossAmount = Math.floor(Math.random() * amount) + 1;
         coins[userId].balance -= lossAmount;
-        await message.reply(`💀 You lost ${lossAmount} coins. Your new balance is ${coins[userId].balance} coins.`);
+        await message.reply(`💀 You lost ${lossAmount} coins. Your new balance is **${coins[userId].balance}** coins.`);
       }
 
       coins[userId].username = username;
       saveJSON(COIN_FILE, coins);
     }
+  
+const tags = {
+    issue: "If you have an issue with the bot, please create a ticket in the [DB Support Server](https://discord.gg/Hsutzpv6MM).",
+    suggestion: "If you have a feature suggestion, go to the [DB Support Server](https://discord.gg/Hsutzpv6MM)!",
+    dbs: "Join the [DB Support Server](https://discord.gg/Hsutzpv6MM) if you have any issues or suggestions.",
+};
+
+if (message.content.startsWith(';tag ')) {
+    const args = message.content.slice(5).trim().split(/ +/);
+    const tagName = args.join(' ').toLowerCase();
+
+    if (!tagName) {
+        return message.reply("Please provide a tag name, e.g., `;tag issue`.");
+    }
+
+    const tagContent = tags[tagName];
+    if (!tagContent) {
+        return message.reply(`No tag found for \`${tagName}\`.`);
+    }
+
+    const embed = new EmbedBuilder()
+        .setAuthor({ name: 'Debt Bot' })
+        .setTitle(`Tag: ${tagName}`)
+        .setDescription(tagContent)
+        .setColor(0x5865F2)
+        .setTimestamp();
+
+    message.channel.send({ embeds: [embed] });
+}
+
+if (command === "gift") {
+  const senderId = message.author.id;
+  const targetUser = message.mentions.users.first();
+  if (!targetUser) return message.reply("Please mention a user to gift coins to.");
+  const targetId = targetUser.id;
+
+  // Parse amount (supports 10k, 5,000)
+  const rawAmount = args.slice(1).join("").replace(/,/g, "").toLowerCase();
+  const amount = parseInt(rawAmount.replace(/k/g, "000"));
+  if (isNaN(amount) || amount <= 0) return message.reply("Please provide a valid amount to gift.");
+
+  // Ensure both users exist in the coin file
+  if (!coins[senderId]) coins[senderId] = { username: message.author.username, balance: 0 };
+  if (!coins[targetId]) coins[targetId] = { username: targetUser.username, balance: 0 };
+
+  if (coins[senderId].balance < amount) return message.reply("You don’t have enough coins to gift that amount.");
+
+  const executeGift = () => {
+    coins[senderId].balance -= amount;
+    coins[targetId].balance += amount;
+
+    fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
+    message.reply(`💸 You gifted **${amount} coins** to ${targetUser.tag}!`);
+  };
+
+  if (amount >= 10000) {
+    message.reply(`⚠ Warning: You are gifting **${amount} coins**, this is over the 10,000 limit for a warning.\nReply with **yes** or **no** within 15 seconds.`)
+      .then(() => {
+        const filter = m => m.author.id === senderId && ["yes", "no"].includes(m.content.toLowerCase());
+        message.channel.awaitMessages({ filter, max: 1, time: 15000, errors: ['time'] })
+          .then(collected => {
+            if (collected.first().content.toLowerCase() === "yes") executeGift();
+            else message.reply("Gift cancelled ❌");
+          })
+          .catch(() => message.reply("No response received. Gift cancelled ❌"));
+      });
+  } else {
+    executeGift();
+  }
+}
+
+if (command === "start") {
+  const userId = message.author.id;
+
+  // If user already has an entry
+  if (coins[userId] && typeof coins[userId].balance === "number" && coins[userId].balance > 9999) {
+    return message.reply("You already have a balance of 10,000 or over, your request for 10,000 more has been rejected.");
+  }
+
+  // Initialize the user with starting coins
+  coins[userId] = {
+    username: message.author.username,
+    balance: 10000 // starting amount
+  };
+
+  fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
+  return message.reply("You’ve received **10,000 coins** to start your journey.");
+}
+
+// Rob command
+if (command === 'rob') {
+  const target = message.mentions.users.first();
+  const robberId = message.author.id;
+
+  if (!target) {
+    return message.reply("❌ You need to mention someone to rob.");
+  }
+  if (target.id === robberId) {
+    return message.reply("❌ You can’t rob yourself.");
+  }
+
+  // Make sure both robber & target have balances
+  if (!coins[robberId] || typeof coins[robberId] !== "object") {
+    coins[robberId] = { username: message.author.username, balance: 0 };
+  }
+  if (!coins[target.id] || typeof coins[target.id] !== "object") {
+    coins[target.id] = { username: target.username, balance: 0 };
+  }
+
+  const robberBalance = coins[robberId].balance;
+  const targetBalance = coins[target.id].balance;
+
+  if (targetBalance < 250) {
+    return message.reply("💤 That user is too broke to rob.");
+  }
+
+  // Success chance
+  const success = Math.random() < 0.7; // 40% chance
+
+  if (success) {
+    // Random steal between 10% - 30% of target's balance
+    const amount = Math.floor(targetBalance * (0.1 + Math.random() * 0.4));
+
+    coins[robberId].balance += amount;
+    coins[target.id].balance -= amount;
+
+    fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
+
+    return message.reply(`You successfully robbed **${target.username}** and stole **${amount} coins**.`);
+  } else {
+    // Failed robbery → robber loses some coins instead
+    const fine = Math.min(robberBalance, Math.floor(200 + Math.random() * 300));
+
+    coins[robberId].balance -= fine;
+    fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
+
+    return message.reply(`🚨 You got caught trying to rob **${target.username}** and had to pay a fine of **${fine} coins**.`);
+  }
+}
+
+if (command === "slots") {
+  function parseAmount(input) {
+    if (!input) return NaN;
+    const match = input.toLowerCase().match(/^(\d+)([kmbt]?)$/);
+    if (!match) return NaN;
+
+    let num = parseInt(match[1], 10);
+    const suffix = match[2];
+
+    switch (suffix) {
+      case "k": num *= 1_000; break;
+      case "m": num *= 1_000_000; break;
+      case "b": num *= 1_000_000_000; break;
+      case "t": num *= 1_000_000_000_000; break;
+    }
+
+    return num;
+  }
+
+  const bet = parseAmount(args[0]);
+  const userId = message.author.id;
+
+  // Ensure user exists with balance
+  if (!coins[userId] || typeof coins[userId].balance !== "number") {
+    coins[userId] = {
+      username: message.author.username,
+      balance: 0
+    };
+  }
+
+  if (isNaN(bet) || bet <= 0) {
+    return message.reply("You must bet a number greater than 0.");
+  }
+
+  if (coins[userId].balance < bet) {
+    return message.reply("You don’t have enough coins to bet that amount.");
+  }
+
+  // Subtract bet upfront
+  coins[userId].balance -= bet;
+
+  const slotItems = ["🍒", "🍋", "🍊", "🍉", "⭐", "7️⃣"];
+  const result = [
+    slotItems[Math.floor(Math.random() * slotItems.length)],
+    slotItems[Math.floor(Math.random() * slotItems.length)],
+    slotItems[Math.floor(Math.random() * slotItems.length)]
+  ];
+
+  message.reply("Spinning the slots...").then(sentMessage => {
+    setTimeout(() => {
+      let outcomeText = "";
+
+      if (result[0] === result[1] && result[1] === result[2]) {
+        coins[userId].balance += bet * 5;
+        outcomeText = `🎉 Jackpot! You won ${bet * 5} coins!`;
+      } else if (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]) {
+        coins[userId].balance += bet * 2;
+        outcomeText = `✨ Nice! You won ${bet * 2} coins!`;
+      } else {
+        outcomeText = `😢 You lost ${bet} coins.`;
+      }
+
+      outcomeText += `\n💰 New Balance: ${coins[userId].balance}`;
+
+      sentMessage.edit(`${result.join(" | ")}\n${outcomeText}`);
+
+      const fs = require("fs");
+      fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
+    }, 2000);
+  });
+}
 
   } catch (err) {
     console.error('💥 Error in messageCreate event:', err);
-  }
+  } 
+
 });
 
 client.login(process.env.TOKEN);
 
 const shutdown = async () => {
-  const channelId = '1404851796337229896';
+  const channelId = ''; // Add your own.
 
   try {
     const channel = await client.channels.fetch(channelId);
     if (channel && channel.isTextBased()) {
-      await channel.send(`<@&1404856537284874392> <@${client.user.id}> is now offline.`);
+      await channel.send(`<@${client.user.id}> is now offline.`);
     }
   } catch (err) {
     console.error('Failed to send shutdown message:', err.message);
