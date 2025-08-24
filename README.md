@@ -18,7 +18,11 @@ Commands are
 
 > ;lb/leaderboard for seeing the top ten people with debt
 
-> ;b/balance for checking your coin balance 
+> ;b/balance for checking your coin balance
+
+> ;stats for looking at your own or others stags - Usage : ;stats [user]
+
+> ;slots for playing slots.. obviously
 
 > ;setdebt/sd for setting your own or other peoples debt (requires putting in an ADMIN_ROLE_ID in index.js) - Usage : ;setdebt/sd [user] [amount]
 

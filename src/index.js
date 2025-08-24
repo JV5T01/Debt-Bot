@@ -294,9 +294,11 @@ if (command) {
           { name: ';gamble/g [amount]', value: '1 in 25 chance to double coins' },
           { name: ';tag', value: 'Choose between 3 tags: \n\'issue\'\n\'suggestion\'\n\'dbs\'' },
           { name: ';leaderboard/lb', value: 'Shows a leaderboard with users with the most debt' },
-          { name: ';gift/give', value: 'Gift other users some coins!\nUsage `;gift/give {@user} {amount}`'},
+          { name: ';gift/give', value: 'Gift other users some coins!\nUsage `;gift/give [@user] [amount]`'},
           { name: ';start', value: 'Get a head start by getting 10k coins when you use the commands! But you have to have less then 10k in your balance.'},
-          { name: ';rob/r', value: 'Rob other users, 40% chance of winning\nUsage `;rob/r [@user]`'},
+          { name: ';slots', value: 'Play some slots!'},
+          { name: ';stats', value: 'Look at other users stats\nUsage `;stats [@user]`' }
+
         )
 
       return message.reply({ embeds: [embed] });
@@ -717,6 +719,70 @@ if (command === "slots") {
       fs.writeFileSync(COIN_FILE, JSON.stringify(coins, null, 2));
     }, 2000);
   });
+}
+
+if (command === 'stats') {
+  let targetUser = message.mentions.users.first() || message.author;
+  let targetId = targetUser.id;
+  let targetName = targetUser.username;
+
+  if (!coins[targetId]) {
+    coins[targetId] = { username: targetName, balance: 0 };
+  }
+  if (!userDebts[targetId]) {
+    userDebts[targetId] = { username: targetName, debt: 0, milestones: [] };
+  }
+
+  const balance = coins[targetId].balance ?? 0;
+  const debt = userDebts[targetId].debt ?? 0;
+
+  const embed = {
+    color: 0xFFD700, // gold color
+    title: `${targetName}'s Stats`,
+    fields: [
+      { name: '💰 Balance', value: `${balance} coins`, inline: true },
+      { name: '📉 Debt', value: `${debt} coins`, inline: true }
+    ],
+    footer: { text: `Requested by ${message.author.username}` },
+    timestamp: new Date()
+  };
+
+  return message.reply({ embeds: [embed] });
+}
+
+if (command === 'work') {
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  if (!coins[userId]) {
+    coins[userId] = { username, balance: 0 };
+  }
+
+  // Predefined jobs with min and max earnings
+  const jobs = {
+    lawnmower: { min: 10, max: 100 },
+    farmer: { min: 50, max: 150 },
+    miner: { min: 100, max: 300 },
+    banker: { min: 200, max: 500 }
+  };
+
+  const jobArg = args[0]?.toLowerCase();
+  if (!jobArg || !jobs[jobArg]) {
+    return message.reply(
+      `Please specify a valid job. Available jobs:\n` +
+      Object.keys(jobs).map(j => `- ${j}`).join('\n') +
+      `\nUsage: ;work <job>`
+    );
+  }
+
+  const job = jobs[jobArg];
+  const earnings = Math.floor(Math.random() * (job.max - job.min + 1)) + job.min;
+  coins[userId].balance += earnings;
+  coins[userId].username = username;
+
+  saveJSON(COIN_FILE, coins);
+
+  return message.reply(`💼 ${username} worked as a **${jobArg}** and earned **${earnings} coins**! Your new balance is **${coins[userId].balance} coins**.`);
 }
 
   } catch (err) {
