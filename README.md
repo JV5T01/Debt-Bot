@@ -2,11 +2,11 @@ The creator of the bot is 'jv5t01.', you get 5 debt per message
 __________________________________________________________________________
 Commands are
 
-> ;h/help for all commands
+> ;help/h for all commands
 
-> ;p/pay for paying your debt
+> ;pay/p for paying your debt
 
-> ;d/debt for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
+> ;debt/d for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
 
 > ;daily for getting 1k daily coins
 
@@ -14,11 +14,11 @@ Commands are
 
 > ;gift/give for giving others coins
 
-> ;g/gamble for gambling
+> ;gamble/g for gambling
 
-> ;lb/leaderboard for seeing the top ten people with debt
+> ;leaderboard/lb for seeing the top ten people with debt
 
-> ;b/balance for checking your coin balance 
+> ;balance/b for checking your coin balance 
 
 > ;setdebt/sd for setting your own or other peoples debt (requires putting in an ADMIN_ROLE_ID in index.js) - Usage : ;setdebt/sd [user] [amount]
 
