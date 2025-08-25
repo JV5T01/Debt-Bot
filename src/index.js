@@ -246,6 +246,27 @@ if (command) {
   }
 }
 
+const ALLOWED_CHANNELS = [
+  '', // Add your own channel IDs if you would like, or just remove the block for no blocking on commands accept in accepted channels.
+  ''
+];
+
+const member = message.member;
+
+const isAdmin = member.roles.cache.some(role => ADMIN_ROLE_IDS.includes(role.id));
+
+if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
+  try {
+    await message.delete();
+    await message.author.send(
+      "You can't do commands in that channel, please go to the `#bot-cmds` or something similar."
+    );
+  } catch (err) {
+    console.warn(`Couldn't delete or DM ${message.author.tag}:`, err.message);
+  }
+  return;
+}
+
     // Shutdown / Restart commands
     if (command === 'ssd' || command === 'rs') {
       const isRestart = command === 'rs';
