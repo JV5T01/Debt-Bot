@@ -6,11 +6,11 @@ Owner only commands require putting in an a userid for the server owner in the c
 __________________________________________________________________________
 Commands are
 
-> ;h/help for all commands
+> ;help/h for all commands
 
-> ;p/pay for paying your debt
+> ;pay/p for paying your debt
 
-> ;d/debt for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
+> ;debt/d for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
 
 > ;daily for getting 1k daily coins
 
@@ -18,11 +18,11 @@ Commands are
 
 > ;gift/give for giving others coins
 
-> ;g/gamble for gambling
+> ;gamble/g for gambling
 
-> ;lb/leaderboard for seeing the top ten people with debt
+> ;leaderboard/lb for seeing the top ten people with debt
 
-> ;b/balance for checking your coin balance
+> ;b/balance for checking your coin balance 
 
 > ;stats for looking at your own or others stags - Usage : ;stats [user]
 
