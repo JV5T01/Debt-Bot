@@ -6,11 +6,11 @@ Owner only commands require putting in an a userid for the server owner in the c
 __________________________________________________________________________
 Commands are
 
-> ;help/h for all commands
+> ;h/help for all commands
 
-> ;pay/p for paying your debt
+> ;p/pay for paying your debt
 
-> ;debt/d for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
+> ;d/debt for checking your debt, you can also check someone elses - Usage : ;debt/d [user]
 
 > ;daily for getting 1k daily coins
 
@@ -18,11 +18,11 @@ Commands are
 
 > ;gift/give for giving others coins
 
-> ;gamble/g for gambling
+> ;g/gamble for gambling
 
-> ;leaderboard/lb for seeing the top ten people with debt
+> ;lb/leaderboard for seeing the top ten people with debt
 
-> ;b/balance for checking your coin balance 
+> ;b/balance for checking your coin balance
 
 > ;stats for looking at your own or others stags - Usage : ;stats [user]
 
@@ -40,7 +40,7 @@ Commands are
 
 > ;mute for muting users (Admin only) - Usage : ;mute [user] [duration] [reason]
 
-> ;mod/unmod for modding and unmodding users (Owner only) (need to put role ids in 'MOD_ROLE_IDS) - Usage : ;mod/unmod [user]
+> ;mod/unmod for modding and unmodding users (Owner only) (need to put role ids in 'MOD_ROLE_IDS) - Usage : ;mod/unmod 
  
 > ;ssd for shutting the bot down with commands (Owner only)
 
