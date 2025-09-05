@@ -4,6 +4,7 @@ require('dotenv').config({
 const { Client, IntentsBitField, EmbedBuilder, userMention } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { joinVoiceChannel } = require('@discordjs/voice');
 
 const client = new Client({
   intents: [
@@ -15,12 +16,12 @@ const client = new Client({
 });
 
 const PREFIX = ';';
-const LOG_CHANNEL_ID = ''; // Add your own.
+const LOG_CHANNEL_ID = ''; // Put your own
 const DEBT_FILE = path.join(__dirname, 'debt.json');
 const COIN_FILE = path.join(__dirname, 'coinamount.json');
 const DAILY_FILE = path.join(__dirname, 'daily.json');
-const ADMIN_ROLE_IDS = ['']; // Add your own.
-const MILESTONE_ROLE_IDS = ['']; // Add your own.
+const ADMIN_ROLE_IDS = ['']; // Put your own
+const MILESTONE_ROLE_IDS = ['']; // Put your own
 const DEBT_MILESTONES = [100, 250, 350, 500, 750, 1000, 2000, 3000, 4000, 5000, 10000, ];
 
 let userDebts = {};
@@ -75,7 +76,7 @@ client.once('ready', () => {
         { 
             name: 'my gambling addiction', 
             type: 1, // Streaming
-            url: 'https://twitch.tv/jv5t01' // My Twitch
+            url: 'https://twitch.tv/jv5t01' // My twitch
         }
     ];
 
@@ -94,6 +95,8 @@ client.once('ready', () => {
         status: 'online'
     });
 });
+
+
   
 client.on('messageCreate', message => {
     // Ignore bots
@@ -129,7 +132,7 @@ client.on('messageCreate', message => {
         if (userEntry.debt >= milestone && !userEntry.milestones.includes(milestone)) {
           userEntry.milestones.push(milestone);
 
-          let notifyMessage = `<@${userId}> you reached ${milestone} in debt.. `;
+          let notifyMessage = `You reached ${milestone} in debt.. `;
 
           if (milestone === 100) {
             notifyMessage += 'PAY YOUR DEBT';
@@ -138,7 +141,7 @@ client.on('messageCreate', message => {
           } else if (milestone === 350) {
             notifyMessage += 'IM 10 MILES AWAY, YOU BETTER RUN.';
           } else if (milestone === 500) {
-            notifyMessage += 'YOU\'RE MINE 👅 (timed out for 10 minutes for reaching 500 debt)';
+            notifyMessage += 'YOU\'RE MINE 👅';
           } else if (milestone === 750) {
             notifyMessage += 'PAY.. YOUR.. DEBT.. NOW...';
           } else if (milestone === 1000) {
@@ -153,27 +156,18 @@ client.on('messageCreate', message => {
             notifyMessage += `alright thats it, how the fuck did you get to 5000 debt`;
           } else if (milestone === 10000) {
             notifyMessage += `what the **FUCK**? WHY ARENT YOU PAYING YOUR DEBTS`;
-          
-            
-          
+
             try {
               const guildMember = await message.guild.members.fetch(userId);
-              await guildMember.timeout(10 * 60 * 1000, 'Reached 500 debt.'); // 10 minutes
+              await guildMember.timeout(10 * 60 * 1000, 'Reached 10k debt.'); // 10 minutes
             } catch (err) {
               console.warn(`⚠️ Couldn't timeout ${username}:`, err.message);
             }
           }
-
-          // Send DM
-          try {
-            await message.author.send(notifyMessage);
-          } catch (err) {
-            console.warn(`⚠️ Couldn't DM ${username}:`, err.message);
-          }
-
+        
           // Send to channel - await & try/catch!
           try {
-            await message.channel.send(notifyMessage);
+            await message.channel.reply(notifyMessage);
           } catch (err) {
             console.warn(`⚠️ Couldn't send message in channel:`, err.message);
           }
@@ -207,12 +201,14 @@ client.on('messageCreate', message => {
       g: 'gamble',
       sd: 'setdebt',
       sb: 'setbal',
-      b: 'balance',
+      bal: 'balance',
       lb: 'leaderboard',
       h: 'help',
       give: 'gift',
       r: 'rob', 
-      
+      b: 'ban',
+      k: 'kick',
+      m: 'mute',
     };
 
     command = aliases[command] || command;
@@ -247,19 +243,23 @@ if (command) {
 }
 
 const ALLOWED_CHANNELS = [
-  '', // Add your own channel IDs if you would like, or just remove the block for no blocking on commands accept in accepted channels.
-  ''
+  '', // Put
+  '', // Your
+  '', // Own
+  '', // Channel
+  '', // IDs
 ];
 
 const member = message.member;
 
 const isAdmin = member.roles.cache.some(role => ADMIN_ROLE_IDS.includes(role.id));
+const isOwner = userId === OWNER_USER_ID; 
 
-if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
+if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin && !isOwner) {
   try {
     await message.delete();
     await message.author.send(
-      "You can't do commands in that channel, please go to the `#bot-cmds` or something similar."
+      "You can't do commands in that channel, please go to the `#bot-cmds` channel or something similar."
     );
   } catch (err) {
     console.warn(`Couldn't delete or DM ${message.author.tag}:`, err.message);
@@ -267,17 +267,16 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
   return;
 }
 
-    // Shutdown / Restart commands
-    if (command === 'ssd' || command === 'rs') {
+    if (command === 'ssd' || command === 'rs') { // Admin Only | Shutdown and Restart commands
       const isRestart = command === 'rs';
-      const isAdmin = ADMIN_ROLE_IDS.some(roleId => message.member.roles.cache.has(roleId));
+      const isOwner = userId === OWNER_USER_ID;
 
-      if (isAdmin) {
+      if (isOwner) {
         try {
           await message.react('✅');
         } catch {}
 
-        const channelId = ('1404851796337229896');
+        const channelId = (''); // Logging channel for shutdowns and restarts
         try {
           const channel = await client.channels.fetch(channelId);
           if (channel && channel.isTextBased()) {
@@ -293,33 +292,36 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
         try {
           await message.react('❌');
         } catch {}
-        console.log(`${username} ran an admin only command, though the user does not have an admin role. | SSD/RS`)
-        await message.reply('You do not have permission to use this command.');
+        console.log(`${username} ran an owner only command, though the user is not the owner. | SSD/RS`)
+        await message.reply('Only the owner can run this command..')
       }
-      return;
     }
+
 
     if (command === 'help') {
       const embed = new EmbedBuilder()
         .setTitle('Debt Bot Commands')
         .setColor('Blue') 
         .setFooter({ text: 'There is a secret command, it is 7 digits \(numbers\), if you find it, then i\'ll be very surprised.' })
-        .addFields(
+        .addFields( // { name: ';', value: '' },
           { name: ';help/h', value: 'Show this help message' },
           { name: ';debt/d', value: 'Check your or someone else\'s debt\nUsage `;debt/d [@user]`' },
           { name: ';pay/p', value: 'Pay off all your debt' },
           { name: ';setdebt/sd', value: '(Admin Only) Set debt for others or yourself\nUsage `;setdebt/sd [@user]`' },
           { name: ';setbal/sb', value: '(Admin Only) Set other users balance\nUsage `;setbal/sb [@user]`'},
-          { name: ';balance/b', value: 'Check your coin balance' },
+          { name: ';balance/bal', value: 'Check your coin balance' },
           { name: ';daily', value: 'Claim 1000 coins daily' },
           { name: ';gamble/g [amount]', value: '1 in 25 chance to double coins' },
           { name: ';tag', value: 'Choose between 3 tags: \n\'issue\'\n\'suggestion\'\n\'dbs\'' },
           { name: ';leaderboard/lb', value: 'Shows a leaderboard with users with the most debt' },
           { name: ';gift/give', value: 'Gift other users some coins!\nUsage `;gift/give [@user] [amount]`'},
-          { name: ';start', value: 'Get a head start by getting 10k coins when you use the commands! But you have to have less then 10k in your balance.'},
-          { name: ';slots', value: 'Play some slots!'},
-          { name: ';stats', value: 'Look at other users stats\nUsage `;stats [@user]`' }
-
+          { name: ';start', value: 'Get a head start by getting 10k coins when you use the commands!\nBut you have to have less then 10k in your balance.'},
+          { name: ';slots', value: 'Play some slots!\nUsage `;slots [amount]`'},
+          { name: ';stats', value: 'Look at other users stats\nUsage `;stats [@user]`' },
+          { name: ';work', value: 'have a **JOB** (JOB APPLICATION-), do simply \';work\' to see all jobs\nUsage `;work [job]`' },
+          { name: ';ban/b', value: '(Admin Only) Ban users\nUsage `;ban [user] [reason]`' },
+          { name: ';kick/k', value: '(Admin Only) Kick users\nUsage `;kick [user] [reason]`' },
+          { name: ';mute/m', value: '(Admin Only) Mute users for an amount of time\nUsage `;mute [user] [muted time] [reason]`' },
         )
 
       return message.reply({ embeds: [embed] });
@@ -393,14 +395,13 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
 
       const embed = new EmbedBuilder()
         .setTitle('Top 10 people with debt')
-        .setDescription(leaderboardText)
+        .setDescription(`${leaderboardText}\nThis info is across servers.`)
         .setColor('Random');
-  
 
       return message.reply({ embeds: [embed] });
     }
 
-    if (command === 'setdebt') { // Set your own or others debt.
+    if (command === 'setdebt') { // Admin Only | Set your own or others debt.
       const target = message.mentions.users.first();
       const amountArg = target ? args[1] : args[0];
       const amount = parseInt(amountArg);
@@ -411,6 +412,14 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
         console.log(`${username} ran an admin only command, though the user does not have an admin role. | SD`)
         return message.reply('You do not have permission to use this command.')
         
+      }
+
+      if (message.author.id !== OWNER_USER_ID) {
+        return message.reply("You don’t have permission to use this command.")
+      }
+      
+      if (targetId === OWNER_USER_ID && userId !== OWNER_USER_ID) {
+        return message.reply('You cannot do anything to the owner of the bot.');
       }
 
       if (isNaN(amount)) {
@@ -425,7 +434,8 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
       }
 
       saveJSON(DEBT_FILE, userDebts);
-      return message.reply(`Debt for <@${targetId}> set to ${amount}.`);
+      console.log(`${username} has set ${targetName}'s debt to ${amount}.`)
+      return message.reply(`Debt for **${targetName}** set to **${amount}**.`);
     }
 
 
@@ -438,35 +448,265 @@ if (!ALLOWED_CHANNELS.includes(message.channel.id) && !isAdmin) {
       return message.reply(`You have ${coins[userId].balance} coins.`);
     }
 
-  if (command === 'setbal') { // Admin Only | Set other users balance
-  const memberRoles = message.member.roles.cache;
-  const isAdmin = ADMIN_ROLE_IDS.some(roleId => memberRoles.has(roleId));
+if (command === 'setbal') { // Admin Only | Set other users balance
+  const target = message.mentions.users.first();
+  const amountArg = target ? args[1] : args[0];
+  const amount = parseInt(amountArg);
+  const targetId = target ? target.id : userId;
+  const targetName = target ? target.username : username;
 
   if (!isAdmin) {
     console.log(`${username} ran an admin only command, though the user does not have an admin role. | SB`)
     return message.reply("You don't have permission to use this command.")
   }
 
-  const target = message.mentions.users.first();
-  const amount = parseInt(args[1]);
-
-  if (!target) {
-    return message.reply("You need to mention a user.");
+  if (targetId === OWNER_USER_ID && userId !== OWNER_USER_ID) {
+    return message.reply('You cannot do anything to the owner of the bot.');
   }
+
   if (isNaN(amount) || amount < 0) {
     return message.reply("Please provide a valid number greater than or equal to 0.");
   }
 
-  if (!coins[target.id]) {
-    coins[target.id] = { username: target.username, balance: 0 };
+  if (!coins[targetId]) {
+    coins[targetId] = { username: targetName, balance: 0 };
   }
 
-  coins[target.id].balance = amount;
-  coins[target.id].username = target.username;
+  coins[targetId].balance = amount;
+  coins[targetId].username = targetName;
 
   saveJSON(COIN_FILE, coins);
+  console.log(`${username} has set ${targetName}'s balance to ${amount}.`)
+  return message.reply(`✅ Set ${targetName}'s balance to ${amount} coins.`);
+}
 
-  return message.reply(`✅ Set ${target.username}'s balance to ${amount} coins.`);
+
+if (command === "ban") { // Admin Only | Bans the mentioned user.
+  const userId = message.author.id;
+
+  // Check if user is owner or has one of the admin roles
+  const isOwner = userId === OWNER_USER_ID;
+  const isAdmin = message.member.roles.cache.some(role => ADMIN_ROLE_IDS.includes(role.id));
+
+  if (!isOwner && !isAdmin) {
+    return message.reply("❌ You don’t have permission to use this command.");
+  }
+
+  // Get the mentioned user
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply(`⚠️ Please mention a user to ban. Example: ;ban <@${userId}> s`);
+  }
+
+  // Extract reason
+  const argsWithoutCommand = args.slice(1);
+  const reason = argsWithoutCommand.join(" ") || "No reason provided";
+
+  // Get the member object
+  const member = message.guild.members.cache.get(user.id);
+  if (!member) {
+    return message.reply("⚠️ That user is not in this server.");
+  }
+
+  // Check if the bot can ban this member
+  if (!member.bannable) {
+    return message.reply("❌ I cannot ban this user. Their role might be higher than mine.");
+  }
+
+  try {
+    await member.ban({ reason: `${reason} | Banned by ${message.author.tag}` });
+    message.reply(`**${user.tag}** has been banned for \`${reason}\``);
+  } catch (err) {
+    console.error(err);
+    message.reply("⚠️ Something went wrong while trying to ban that user.");
+  }
+}
+
+if (command === "kick") { // Admin Only | Kicks the mentioned user.
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  // Check if user is owner or has one of the admin roles
+  const isOwner = userId === OWNER_USER_ID;
+  const isAdmin = message.member.roles.cache.some(role => ADMIN_ROLE_IDS.includes(role.id));
+
+  if (!isOwner && !isAdmin) {
+    return message.reply("❌ You don’t have permission to use this command.");
+  }
+
+  // Get the mentioned user
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply("⚠️ Please mention a user to kick. Example: `;kick @jason being rude`");
+  }
+
+  // Extract reason
+  const argsWithoutCommand = args.slice(1);
+  const reason = argsWithoutCommand.join(" ") || "No reason provided";
+
+  // Get the member object
+  const member = message.guild.members.cache.get(user.id);
+  if (!member) {
+    return message.reply("⚠️ That user is not in this server.");
+  }
+
+  // Check if the bot can kick this member
+  if (!member.kickable) {
+    return message.reply("❌ I cannot kick this user. Their role might be higher than mine.");
+  }
+
+  try {
+    await member.kick(`${reason} | Kicked by ${message.author.tag}`);
+    message.reply(`**${user.tag}** has been kicked for \`${reason}\``);
+  } catch (err) {
+    console.error(err);
+    message.reply("⚠️ Something went wrong while trying to kick that user.");
+  }
+}
+
+function parseDuration(input) {
+  if (!input) return null;
+  const match = input.match(/^(\d+)(s|m|h|d)$/);
+  if (!match) return null;
+
+  const value = parseInt(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case "s": return value * 1000;
+    case "m": return value * 60 * 1000;
+    case "h": return value * 60 * 60 * 1000;
+    case "d": return value * 24 * 60 * 60 * 1000;
+    default: return null;
+  }
+}
+
+if (command === "mute") { // Admin Only | Mute users for a specified amount of time
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  const isOwner = userId === OWNER_USER_ID;
+  const isAdmin = message.member.roles.cache.some(role => ADMIN_ROLE_IDS.includes(role.id));
+  if (!isOwner && !isAdmin)
+    return message.reply("❌ You don’t have permission to use this command.");
+
+  const user = message.mentions.users.first();
+  if (!user) return message.reply("⚠️ Please mention a user to mute. Example: `;mute @user 10m being loud`");
+
+  const member = message.guild.members.cache.get(user.id);
+  if (!member) return message.reply("⚠️ That user is not in this server.");
+  if (!member.moderatable) return message.reply("❌ I cannot mute this user. Their role might be higher than mine.");
+
+  // Check if already muted
+  if (member.communicationDisabledUntilTimestamp && member.communicationDisabledUntilTimestamp > Date.now()) {
+    const remainingMs = member.communicationDisabledUntilTimestamp - Date.now();
+    const remainingSeconds = Math.floor(remainingMs / 1000);
+    const remainingMinutes = Math.floor(remainingSeconds / 60);
+    const remainingHours = Math.floor(remainingMinutes / 60);
+    const remainingDays = Math.floor(remainingHours / 24);
+
+    let remainingStr = "";
+    if (remainingDays > 0) remainingStr += `${remainingDays}d `;
+    if (remainingHours % 24 > 0) remainingStr += `${remainingHours % 24}h `;
+    if (remainingMinutes % 60 > 0) remainingStr += `${remainingMinutes % 60}m `;
+    if (remainingSeconds % 60 > 0) remainingStr += `${remainingSeconds % 60}s`;
+
+    return message.reply(`⚠️ \`${user.username}\` is already muted. Time remaining: **${remainingStr.trim()}**`);
+  }
+
+  const durationArg = args[1];
+  if (!durationArg) return message.reply("⚠️ Please specify a duration. Example: `10m`, `1h`, `30s`");
+
+  const duration = parseDuration(durationArg);
+  if (!duration) return message.reply("⚠️ Invalid duration. Use `30s`, `10m`, `1h`, or `1d`.");
+  if (duration > 2419200000) return message.reply("⚠️ Maximum mute duration is 28 days.");
+
+  const reason = args.slice(2).join(" ") || "No reason provided";
+
+   try {
+    await user.send(`⚠️ You have been muted in **${message.guild.name}** for \`${durationArg}\` Reason: \`${reason}\``);
+  } catch (dmErr) {
+    console.warn(`Could not DM ${user.tag} about mute:`, dmErr.message);
+  }
+
+  try {
+    await member.timeout(duration, `${reason} | Muted by ${message.author.tag}`);
+    message.reply(`✅ **${user.username}** has been muted for a duration of \`${durationArg}\` for the reason \`${reason}\`.`);
+  } catch (err) {
+    console.error(err);
+    message.reply("⚠️ Something went wrong while trying to mute that user.");
+  }
+}
+
+// IDs of roles to give/remove for moderators
+const MOD_ROLE_IDS = ["", ""]; // replace with your role IDs
+
+if (command === "mod" || command === "unmod") {
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  // Check if the author is the owner
+  const isOwner = userId === OWNER_USER_ID;
+  if (!isOwner) return message.reply("❌ You don’t have permission to use this command.");
+
+  const user = message.mentions.users.first();
+  if (!user) return message.reply(`⚠️ Please mention a user. Example: ;${command} @user`);
+
+  const member = message.guild.members.cache.get(user.id);
+  if (!member) return message.reply("⚠️ That user is not in this server.");
+
+  if (command === "mod") {
+    // Give roles
+    const addedRoles = [];
+    for (const roleId of MOD_ROLE_IDS) {
+      const role = message.guild.roles.cache.get(roleId);
+      if (!role) continue;
+
+      if (!member.roles.cache.has(role.id)) {
+        await member.roles.add(role).catch(console.error);
+        addedRoles.push(role.name);
+      }
+    }
+
+    if (addedRoles.length === 0) {
+      message.reply(`⚠️ ${user.username} already has all mod roles.`);
+    } else {
+      message.reply(`✅ ${user.username} has been given roles: ${addedRoles.join(", ")}`);
+    }
+  } else if (command === "unmod") {
+    // Remove roles
+    const removedRoles = [];
+    for (const roleId of MOD_ROLE_IDS) {
+      const role = message.guild.roles.cache.get(roleId);
+      if (!role) continue;
+
+      if (member.roles.cache.has(role.id)) {
+        await member.roles.remove(role).catch(console.error);
+        removedRoles.push(role.name);
+      }
+    }
+
+    if (removedRoles.length === 0) {
+      message.reply(`⚠️ ${user.username} had none of the mod roles.`);
+    } else {
+      message.reply(`✅ ${user.username} has had roles removed: ${removedRoles.join(", ")}`);
+    }
+  }
+}
+
+// ;leave command - Owner only, makes the bot leave the server
+if (command === 'leaveserver1024') {
+  if (message.author.id !== OWNER_USER_ID) {
+    return message.reply("Only the bot owner can use this command.");
+  }
+
+  await message.reply("Leaving the server...");
+  message.guild.leave()
+    .then(() => console.log(`Bot left the server: ${message.guild.name} (${message.guild.id})`))
+    .catch(err => {
+      console.error("Error leaving server:", err);
+      message.channel.reply("There was an error trying to leave the server.");
+    });
 }
 
 
@@ -520,7 +760,7 @@ if (command === 'daily') {
       if (win) {
         const winAmount = Math.floor(Math.random() * amount) + 1;
         coins[userId].balance += amount;
-        await message.reply(`🎉 You won ${winAmount}! Your new balance is **${coins[userId].balance}** coins.`);
+        await message.reply(`🎉 You won! Your new balance is **${coins[userId].balance}** coins.`);
       } else {
         const lossAmount = Math.floor(Math.random() * amount) + 1;
         coins[userId].balance -= lossAmount;
@@ -630,6 +870,10 @@ if (command === 'rob') {
   if (target.id === robberId) {
     return message.reply("❌ You can’t rob yourself.");
   }
+
+  if (target.id === OWNER_USER_ID) {
+       return message.reply('You cannot do anything to the owner of the bot.')
+  }  
 
   // Make sure both robber & target have balances
   if (!coins[robberId] || typeof coins[robberId] !== "object") {
@@ -781,7 +1025,7 @@ if (command === 'work') {
 
   // Predefined jobs with min and max earnings
   const jobs = {
-    lawnmower: { min: 10, max: 100 },
+    lawnmower: { min: 10, max: 50 },
     farmer: { min: 50, max: 150 },
     miner: { min: 100, max: 300 },
     banker: { min: 200, max: 500 }
@@ -806,16 +1050,60 @@ if (command === 'work') {
   return message.reply(`💼 ${username} worked as a **${jobArg}** and earned **${earnings} coins**! Your new balance is **${coins[userId].balance} coins**.`);
 }
 
+
+
+if (command === 'dih' | command === 'dihh') {
+  message.reply('dihh..🥀💔')
+}
+
+// ;selfelim command
+if (command === 'selfelim') {
+  const filter = (m) => m.author.id === userId;
+  message.reply("⚠️ Are you sure you want to self-eliminate?\nThis will clear your debt and balance.\nType `confirm` to proceed or `cancel` to abort. (15s)");
+
+  try {
+    const collected = await message.channel.awaitMessages({ filter, max: 1, time: 15000, errors: ['time'] });
+    const response = collected.first().content.toLowerCase();
+
+    if (response === 'confirm') {
+      // Timeout user for 5 minutes
+      const guildMember = await message.guild.members.fetch(userId);
+      try {
+      if (coins[userId]) coins[userId].balance = 0;
+      if (userDebts[userId]) {
+        userDebts[userId].debt = 0;
+        userDebts[userId].milestones = [];
+      }
+        await guildMember.timeout(5 * 60 * 1000, "Self-eliminated");
+      } catch (err) {
+        console.log(`${username} self-eliminated, but the bot could not time out the user, the bot may not have the right permissions.`)
+        return message.reply("❌ I couldn't timeout this user, but their debt and balance have been cleared.");
+      }
+
+      // Clear their balance and debt
+      
+
+      saveJSON(COIN_FILE, coins);
+      saveJSON(DEBT_FILE, userDebts);
+
+      return message.reply("✅ You have self-eliminated.\nYour debt and balance are reset, and you have been timed out for 5 minutes.");
+    } else {
+      return message.reply("❎ Self-elimination canceled.");
+    }
+  } catch (err) {
+    return message.reply("⌛ You took too long to respond. Self-elimination canceled.");
+  }
+}
+
   } catch (err) {
     console.error('💥 Error in messageCreate event:', err);
   } 
-
 });
 
 client.login(process.env.TOKEN);
 
 const shutdown = async () => {
-  const channelId = ''; // Add your own.
+  const channelId = '1404851796337229896';
 
   try {
     const channel = await client.channels.fetch(channelId);

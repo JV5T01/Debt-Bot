@@ -1,4 +1,8 @@
 The creator of the bot is 'jv5t01.', you get 5 debt per message
+
+Admin only commands require putting in ADMIN_ROLE_IDS in index.js
+
+Owner only commands require putting in an a userid for the server owner in the const 'OWNER_USER_ID'
 __________________________________________________________________________
 Commands are
 
@@ -24,12 +28,22 @@ Commands are
 
 > ;slots for playing slots.. obviously
 
-> ;setdebt/sd for setting your own or other peoples debt (requires putting in an ADMIN_ROLE_ID in index.js) - Usage : ;setdebt/sd [user] [amount]
+> ;rob for robbing users (needs to have above 250 coins) - Usage : ;rob [user]
 
-> ;setbal/sb for setting your own or others coin balance (requires putting in an ADMIN_ROLE_ID in index.js) - Usage : ;setbal/sb [user] [amount]
+> ;setdebt/sd for setting your own or other peoples debt  - Usage : ;setdebt/sd [user] [amount]
 
-> ;ssd for shutting down the bot using commands (requires putting in an ADMIN_ROLE_ID in index.js)
+> ;setbal/sb for setting your own or others coin balance  - Usage : ;setbal/sb [user] [amount]
 
-> ;rs for restarting the bot (requires putting in an ADMIN_ROLE_ID in index.js)
+> ;ban for banning users (Admin only) - Usage : ;ban [user] [reason]
+
+> ;kick for kicking users (Admin only) - Usage : ;kick [user] [reason]
+
+> ;mute for muting users (Admin only) - Usage : ;mute [user] [duration] [reason]
+
+> ;mod/unmod for modding and unmodding users (Owner only) (need to put role ids in 'MOD_ROLE_IDS) - Usage : ;mod/unmod [user]
+ 
+> ;ssd for shutting the bot down with commands (Owner only)
+
+> ;rs for restarting the bot with commands (Owner only)
 
 ____________________________________________________________
